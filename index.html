@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Asian Countries Fun Facts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        #hover-info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="info"></div>
+    <div id="hover-info">Hover over countries to see their names. Click to see fun facts!</div>
+
+    <script>
+        const funFacts = {
+            'China': 'The Great Wall of China is not visible from space with the naked eye!',
+            'India': 'India has the world\'s largest postal network with over 155,000 post offices!',
+            'Japan': 'There are more vending machines in Japan than there are people in New Zealand!',
+            'Thailand': 'Thailand has never been colonized by a European power!',
+            'Vietnam': 'Vietnam is the world\'s largest exporter of cashew nuts!',
+            // Add more countries and facts as needed
+        };
+
+        let scene, camera, renderer, globe;
+        const mouse = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+
+        init();
+        animate();
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Create globe
+            const geometry = new THREE.SphereGeometry(5, 32, 32);
+            const texture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-dark.jpg');
+            const material = new THREE.MeshPhongMaterial({ map: texture });
+            globe = new THREE.Mesh(geometry, material);
+            scene.add(globe);
+
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(10, 10, 10);
+            scene.add(pointLight);
+
+            camera.position.z = 15;
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onMouseMove, false);
+            document.addEventListener('click', onClick, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onClick() {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(globe);
+            
+            if (intersects.length > 0) {
+                const country = getCountryFromCoordinates(intersects[0].point);
+                if (funFacts[country]) {
+                    const infoDiv = document.getElementById('info');
+                    infoDiv.innerHTML = `<h3>${country}</h3><p>${funFacts[country]}</p>`;
+                    infoDiv.style.display = 'block';
+                }
+            }
+        }
+
+        function getCountryFromCoordinates(point) {
+            // This is a simplified version. In a real application, you'd need proper
+            // geocoding to determine the exact country from coordinates
+            const countries = Object.keys(funFacts);
+            return countries[Math.floor(Math.random() * countries.length)];
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            globe.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
